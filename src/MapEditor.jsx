@@ -88,6 +88,10 @@ export default function MapEditor() {
   const [isResizingRight, setIsResizingRight] = useState(false);
   const [showGridPreview, setShowGridPreview] = useState(false);
   const previewCanvasRef = useRef(null);
+  const [labelOffsets, setLabelOffsets] = useState({});
+  const [draggingLabel, setDraggingLabel] = useState(null);
+  const [labelDragStart, setLabelDragStart] = useState(null);
+  const [nameEditMode, setNameEditMode] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -182,7 +186,7 @@ export default function MapEditor() {
 
   useEffect(() => {
     if (canvasRef.current) draw();
-  }, [scale, offset, objects, mapInfo, tempPoints, selectedId, showGrid, showAxes, showRuler]);
+  }, [scale, offset, objects, mapInfo, tempPoints, selectedId, showGrid, showAxes, showRuler, labelOffsets, nameEditMode]);
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -350,10 +354,26 @@ export default function MapEditor() {
         ctx.closePath();
         ctx.stroke();
       }
-
+      
       ctx.fillStyle = '#1f2937';
       ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(obj.name, pos.x + 8, pos.y - 8);
+      const labelOffset = labelOffsets[obj.id] || { x: 8, y: -8 };
+      
+      // In name edit mode, highlight the label
+      // In name edit mode, highlight the label
+      if (nameEditMode) {
+        const textWidth = ctx.measureText(obj.name).width;
+        const isBeingDragged = draggingLabel === obj.id;
+        
+        ctx.fillStyle = isBeingDragged ? 'rgba(251, 191, 36, 0.2)' : 'rgba(59, 130, 246, 0.1)';
+        ctx.fillRect(pos.x + labelOffset.x - 2, pos.y + labelOffset.y - 11, textWidth + 4, 14);
+        ctx.strokeStyle = isBeingDragged ? '#fbbf24' : '#3b82f6';
+        ctx.lineWidth = isBeingDragged ? 2 : 1;
+        ctx.strokeRect(pos.x + labelOffset.x - 2, pos.y + labelOffset.y - 11, textWidth + 4, 14);
+      }
+      
+      ctx.fillStyle = '#1f2937';
+      ctx.fillText(obj.name, pos.x + labelOffset.x, pos.y + labelOffset.y);
       
       if (obj.type === 'robot') {
         ctx.save();
@@ -443,20 +463,44 @@ export default function MapEditor() {
     }
 
     if (mode === 'select') {
-      for (const item of objects) {
-        if (isPointInShape(world, item.shape)) {
-          setSelectedId(item.id);
-          // Check if movement is possible
-          const lockedX = locks[item.id + '_centerX'];
-          const lockedY = locks[item.id + '_centerY'];
-          if (!lockedX || !lockedY) {
-            setIsDragging(true);
-            setDragStart({ x: world.x, y: world.y, itemX: item.shape.center[0], itemY: item.shape.center[1] });
+      // Name Edit Mode: Only allow dragging names
+      if (nameEditMode) {
+        for (const item of objects) {
+          const pos = worldToCanvas(item.shape.center[0], item.shape.center[1], offset, scale, mapInfo.origin);
+          const labelOffset = labelOffsets[item.id] || { x: 8, y: -8 };
+          const labelX = pos.x + labelOffset.x;
+          const labelY = pos.y + labelOffset.y;
+          
+          const labelWidth = item.name.length * 7;
+          const labelHeight = 12;
+          
+          if (x >= labelX - 2 && x <= labelX + labelWidth + 2 && 
+              y >= labelY - labelHeight - 2 && y <= labelY + 2) {
+            setDraggingLabel(item.id);
+            setLabelDragStart({ x, y, offsetX: labelOffset.x, offsetY: labelOffset.y });
+            setSelectedId(item.id);
+            return;
           }
-          return;
         }
+        setSelectedId(null);
+      } 
+      // Normal Mode: Only allow dragging objects
+      else {
+        for (const item of objects) {
+          if (isPointInShape(world, item.shape)) {
+            setSelectedId(item.id);
+            // Check if movement is possible
+            const lockedX = locks[item.id + '_centerX'];
+            const lockedY = locks[item.id + '_centerY'];
+            if (!lockedX || !lockedY) {
+              setIsDragging(true);
+              setDragStart({ x: world.x, y: world.y, itemX: item.shape.center[0], itemY: item.shape.center[1] });
+            }
+            return;
+          }
+        }
+        setSelectedId(null);
       }
-      setSelectedId(null);
     }
   };
 
@@ -466,7 +510,25 @@ export default function MapEditor() {
       return;
     }
 
-    if (isDragging && selectedId && dragStart) {
+    if (draggingLabel && labelDragStart) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const dx = x - labelDragStart.x;
+      const dy = y - labelDragStart.y;
+      
+      setLabelOffsets(prev => ({
+        ...prev,
+        [draggingLabel]: {
+          x: labelDragStart.offsetX + dx,
+          y: labelDragStart.offsetY + dy
+        }
+      }));
+      return;
+    }
+
+    if (isDragging && selectedId && dragStart && !nameEditMode) {
       // Check if position is locked
       const lockedX = isLocked('centerX');
       const lockedY = isLocked('centerY');
@@ -488,13 +550,24 @@ export default function MapEditor() {
       const newX = lockedX ? dragStart.itemX : +(dragStart.itemX + dx).toFixed(3);
       const newY = lockedY ? dragStart.itemY : +(dragStart.itemY + dy).toFixed(3);
 
-      const newObjects = objects.map(o => 
-        o.id === selectedId ? { 
-          ...o, 
-          shape: { ...o.shape, center: [newX, newY] },
-          ...(o.pose && { pose: { ...o.pose, x: newX, y: newY } })
-        } : o
-      );
+      const newObjects = objects.map(o => {
+        if (o.id === selectedId) {
+          // When object moves in normal mode, reset label offset so it moves with the object
+          if (labelOffsets[o.id]) {
+            setLabelOffsets(prev => {
+              const newOffsets = { ...prev };
+              delete newOffsets[o.id];
+              return newOffsets;
+            });
+          }
+          return { 
+            ...o, 
+            shape: { ...o.shape, center: [newX, newY] },
+            ...(o.pose && { pose: { ...o.pose, x: newX, y: newY } })
+          };
+        }
+        return o;
+      });
       setObjects(newObjects);
     }
   };
@@ -507,6 +580,8 @@ export default function MapEditor() {
     setIsPanning(false);
     setDragStart(null);
     setPanStart(null);
+    setDraggingLabel(null);
+    setLabelDragStart(null);
   };
 
   const handleCanvasClick = (e) => {
@@ -728,6 +803,55 @@ export default function MapEditor() {
     const { pgmData, yamlContent, plannerNpyData } = generateOccupancyGrid(mapInfo, objects);
     downloadOccupancyGrid(pgmData, yamlContent, plannerNpyData, mapInfo.name);
   };
+  const exportMapImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Calculate map bounds with 2 grid lines (1 meter) border on each side
+    const borderSize = 1.0; // 2 grid lines of 0.5m each = 1m
+    const topLeft = worldToCanvas(
+      -borderSize, 
+      mapInfo.height + borderSize, 
+      offset, 
+      scale, 
+      mapInfo.origin
+    );
+    const bottomRight = worldToCanvas(
+      mapInfo.width + borderSize, 
+      -borderSize, 
+      offset, 
+      scale, 
+      mapInfo.origin
+    );
+    
+    const cropX = Math.floor(topLeft.x);
+    const cropY = Math.floor(topLeft.y);
+    const cropWidth = Math.ceil(bottomRight.x - topLeft.x);
+    const cropHeight = Math.ceil(bottomRight.y - topLeft.y);
+    
+    // Create a new canvas for the cropped image
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = cropWidth;
+    tempCanvas.height = cropHeight;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Draw the cropped portion
+    tempCtx.drawImage(
+      canvas,
+      cropX, cropY, cropWidth, cropHeight,
+      0, 0, cropWidth, cropHeight
+    );
+    
+    // Download the cropped image
+    tempCanvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${mapInfo.name}_map.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  };
   const importJSON = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -774,18 +898,24 @@ export default function MapEditor() {
                 <FolderOpen size={16} /> Open
               </button>
               <input ref={fileInputRef} type="file" accept=".json" onChange={importJSON} className="hidden" />
-              <div className="relative dropdown-container">
+              <div className="flex gap-2">
                 <button
                   onClick={exportJSON}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-l text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
                 >
                   <Download size={16} /> Export JSON
                 </button>
                 <button
                   onClick={exportOccupancyGrid}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-r border-l border-green-700 text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                 >
                   <Grid size={16} /> Export PGM
+                </button>
+                <button
+                  onClick={exportMapImage}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm"
+                >
+                  <Download size={16} /> Save Image
                 </button>
               </div>
             </div>
@@ -829,6 +959,15 @@ export default function MapEditor() {
               title="Toggle Ruler"
             >
               <Ruler size={18} />
+            </button>
+            <div className="w-px h-6 bg-gray-300 mx-1"></div>
+            <button
+              onClick={() => setNameEditMode(!nameEditMode)}
+              className={`px-3 py-2 rounded flex items-center gap-2 ${nameEditMode ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              title={nameEditMode ? "Name Edit Mode: ON (Click to turn OFF)" : "Name Edit Mode: OFF (Click to turn ON)"}
+            >
+              <GripVertical size={18} />
+              <span className="text-sm font-medium">Edit Names</span>
             </button>
             <div className="w-px h-6 bg-gray-300 mx-1"></div>
             <button
@@ -1169,9 +1308,11 @@ export default function MapEditor() {
             onContextMenu={(e) => e.preventDefault()}
             className="shadow-xl rounded-lg bg-white"
             style={{ 
-              cursor: mode === 'select' 
-                ? (selectedId && locks[selectedId + '_centerX'] && locks[selectedId + '_centerY'] ? 'not-allowed' : 'default')
-                : 'crosshair' 
+              cursor: nameEditMode 
+                ? (draggingLabel ? 'grabbing' : 'grab')
+                : mode === 'select' 
+                  ? (selectedId && locks[selectedId + '_centerX'] && locks[selectedId + '_centerY'] ? 'not-allowed' : 'default')
+                  : 'crosshair' 
             }}
           />
         </div>
