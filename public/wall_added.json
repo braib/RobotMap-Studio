@@ -1,0 +1,110 @@
+{
+  "map_info": {
+    "name": "New_Map",
+    "resolution": 0.05,
+    "width": 10,
+    "height": 10,
+    "origin": [
+      0,
+      0
+    ],
+    "originPosition": "bottom-left"
+  },
+  "objects": [
+    {
+      "id": "rectangle_1769368915782",
+      "name": "rectangle_1",
+      "type": "obstacle",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          3.392,
+          5.98
+        ],
+        "width": 1,
+        "height": 0.6,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#f97316",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769368933509",
+      "name": "rectangle_2",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          5,
+          9.9
+        ],
+        "width": 10,
+        "height": 0.2,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#f97316",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769369025788",
+      "name": "rectangle_3",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          5,
+          0.1
+        ],
+        "width": 10,
+        "height": 0.2,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#f97316",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769369095357",
+      "name": "rectangle_4",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          0.1,
+          5
+        ],
+        "width": 0.2,
+        "height": 10,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#f97316",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769369139138",
+      "name": "rectangle_5",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          9.9,
+          5
+        ],
+        "width": 0.2,
+        "height": 10,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#f97316",
+        "material": "default"
+      }
+    }
+  ]
+}

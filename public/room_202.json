@@ -1,0 +1,167 @@
+{
+  "map_info": {
+    "name": "room_202",
+    "resolution": 0.1,
+    "width": 4.56,
+    "height": 8.55,
+    "origin": [
+      0,
+      0
+    ],
+    "originPosition": "bottom-left"
+  },
+  "objects": [
+    {
+      "id": "rectangle_1769374170701",
+      "name": "wall1",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          0,
+          2.85
+        ],
+        "width": 0.01,
+        "height": 5.7,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "cocrete"
+      }
+    },
+    {
+      "id": "rectangle_1769374334932",
+      "name": "walll2",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          0.285,
+          5.7
+        ],
+        "width": 0.57,
+        "height": 0.01,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "concrete"
+      }
+    },
+    {
+      "id": "rectangle_1769374533867",
+      "name": "wall3",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          0.57,
+          7.125
+        ],
+        "width": 0.01,
+        "height": 2.85,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "concrete"
+      }
+    },
+    {
+      "id": "rectangle_1769374683803",
+      "name": "wall4",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          2.56,
+          8.55
+        ],
+        "width": 3.99,
+        "height": 0.01,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769374836363",
+      "name": "wall5",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          4.56,
+          7.125
+        ],
+        "width": 0.01,
+        "height": 2.85,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "concrete"
+      }
+    },
+    {
+      "id": "rectangle_1769374923061",
+      "name": "wall6",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          4.275,
+          5.7
+        ],
+        "width": 0.57,
+        "height": 0.01,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "default"
+      }
+    },
+    {
+      "id": "rectangle_1769375114700",
+      "name": "wall7",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          3.99,
+          2.85
+        ],
+        "width": 0.01,
+        "height": 5.7,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "concrete"
+      }
+    },
+    {
+      "id": "rectangle_1769375228380",
+      "name": "wall8",
+      "type": "wall",
+      "shape": {
+        "type": "rectangle",
+        "center": [
+          1.995,
+          0
+        ],
+        "width": 3.99,
+        "height": 0.01,
+        "rotation": 0
+      },
+      "properties": {
+        "color": "#63452c",
+        "material": "default"
+      }
+    }
+  ]
+}

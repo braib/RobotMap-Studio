@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, FolderOpen, Circle, Square, Triangle, Pentagon, Move, ZoomIn, ZoomOut, Grid, Maximize2, Trash2, RotateCw, ChevronDown, Settings, MousePointer2, Target, Ruler, Plus, Undo, Redo, Crosshair, CircleDot, Lock, Unlock, GripVertical } from 'lucide-react';
+import { generateOccupancyGrid, downloadOccupancyGrid } from './OccupancyGridGenerator';
 
 // Utility functions
 const worldToCanvas = (x, y, offset, scale, origin = [0, 0]) => ({
@@ -56,7 +57,7 @@ export default function MapEditor() {
   const [offset, setOffset] = useState({ x: 100, y: 700 });
   const [mapInfo, setMapInfo] = useState({
     name: "New_Map",
-    resolution: 0.05,
+    resolution: 0.1,
     width: 10,
     height: 10,
     origin: [0, 0],
@@ -85,6 +86,8 @@ export default function MapEditor() {
   const [rightSidebarWidth, setRightSidebarWidth] = useState(360);
   const [isResizingLeft, setIsResizingLeft] = useState(false);
   const [isResizingRight, setIsResizingRight] = useState(false);
+  const [showGridPreview, setShowGridPreview] = useState(false);
+  const previewCanvasRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -698,7 +701,7 @@ export default function MapEditor() {
     if (objects.length > 0 && !confirm('Create new map? All unsaved changes will be lost.')) return;
     setMapInfo({
       name: "New_Map",
-      resolution: 0.05,
+      resolution: 0.1,
       width: 10,
       height: 10,
       origin: [0, 0],
@@ -721,6 +724,10 @@ export default function MapEditor() {
     a.click();
   };
 
+  const exportOccupancyGrid = () => {
+    const { pgmData, yamlContent, plannerNpyData } = generateOccupancyGrid(mapInfo, objects);
+    downloadOccupancyGrid(pgmData, yamlContent, plannerNpyData, mapInfo.name);
+  };
   const importJSON = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -767,12 +774,20 @@ export default function MapEditor() {
                 <FolderOpen size={16} /> Open
               </button>
               <input ref={fileInputRef} type="file" accept=".json" onChange={importJSON} className="hidden" />
-              <button
-                onClick={exportJSON}
-                className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
-              >
-                <Download size={16} /> Export
-              </button>
+              <div className="relative dropdown-container">
+                <button
+                  onClick={exportJSON}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-l text-sm"
+                >
+                  <Download size={16} /> Export JSON
+                </button>
+                <button
+                  onClick={exportOccupancyGrid}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-r border-l border-green-700 text-sm"
+                >
+                  <Grid size={16} /> Export PGM
+                </button>
+              </div>
             </div>
           </div>
           
