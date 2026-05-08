@@ -319,7 +319,7 @@ export const downloadOccupancyGrid = (pgmData, yamlContent, plannerNpyData, mapN
       const plannerNpyUrl = URL.createObjectURL(plannerNpyBlob);
       const plannerNpyLink = document.createElement('a');
       plannerNpyLink.href = plannerNpyUrl;
-      plannerNpyLink.download = `${mapName}_planner.npy`;
+      plannerNpyLink.download = `${mapName}.npy`;
       plannerNpyLink.click();
       URL.revokeObjectURL(plannerNpyUrl);
     }, 100);

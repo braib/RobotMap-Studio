@@ -847,7 +847,7 @@ export default function MapEditor() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${mapInfo.name}_map.png`;
+      a.download = `${mapInfo.name}.png`;
       a.click();
       URL.revokeObjectURL(url);
     });
